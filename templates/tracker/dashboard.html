@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% block title %}لوحة التحكم{% endblock %}
+
+{% block content %}
+<!-- Page header -->
+<div class="page-header">
+  <h1 class="label-ar">لوحة التحكم</h1>
+  <h1 class="label-en" style="display:none">Dashboard</h1>
+  <p class="label-ar">{{ progress.date }} · مرحباً {{ request.user.username }}</p>
+  <p class="label-en" style="display:none">{{ progress.date }} · Welcome {{ request.user.username }}</p>
+</div>
+
+<!-- Stats row: Circular + XP + Streak -->
+<div class="stat-grid-3 mb-5">
+
+  <!-- Circular progress -->
+  <div class="stat-card" style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;padding:1rem;">
+    <svg width="120" height="120" viewBox="0 0 120 120" id="circ-svg">
+      <circle cx="60" cy="60" r="54.5" fill="none" stroke="hsl(150,8%,14%)" stroke-width="11"/>
+      <circle cx="60" cy="60" r="54.5" fill="none" stroke="hsl(145,50%,42%)" stroke-width="11"
+        stroke-dasharray="342.3" stroke-dashoffset="{{ circ_offset }}"
+        stroke-linecap="round" transform="rotate(-90 60 60)"
+        style="transition:stroke-dashoffset 0.7s ease" id="circ-arc"/>
+      <text x="60" y="52" text-anchor="middle" dominant-baseline="middle"
+        fill="hsl(150,10%,95%)" font-weight="700" font-size="20" id="circ-pct">{{ completion }}%</text>
+      <text x="60" y="69" text-anchor="middle" dominant-baseline="middle"
+        fill="hsl(150,6%,55%)" font-size="11">Today</text>
+    </svg>
+    <span class="text-xs text-muted label-ar">إنجاز اليوم</span>
+    <span class="text-xs text-muted label-en" style="display:none">Daily Completion</span>
+  </div>
+
+  <!-- XP + level -->
+  <div class="stat-card" style="display:flex;flex-direction:column;justify-content:space-between;gap:0.75rem;">
+    <div>
+      <div class="stat-label">⚡ XP <span class="label-ar">الإجمالي</span><span class="label-en" style="display:none">Total</span></div>
+      <div class="stat-value" id="dash-xp">{{ profile.total_xp }}</div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:0.375rem;">
+        <span class="text-xs text-primary font-semibold">
+          <span class="label-ar">المستوى </span>
+          <span class="label-en" style="display:none">Level </span>
+          <span id="dash-lvl">{{ profile.get_level }}</span>
+        </span>
+        <span class="text-xs text-muted">{{ profile.get_level_progress_pct }}%</span>
+      </div>
+      <div class="progress-wrap progress-h2">
+        <div class="progress-bar" id="dash-xp-bar" style="width:{{ profile.get_level_progress_pct }}%"></div>
+      </div>
+      <div class="text-xs text-muted mt-1">
+        <span class="label-ar">الخطوة التالية: {{ profile.get_next_level_xp }} XP</span>
+        <span class="label-en" style="display:none">Next level: {{ profile.get_next_level_xp }} XP</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Streak -->
+  <div class="stat-card">
+    <div class="stat-label mb-2">🔥 <span class="label-ar">سلسلة الأيام</span><span class="label-en" style="display:none">Streaks</span></div>
+    <div style="display:flex;align-items:baseline;gap:0.25rem;margin-bottom:0.75rem;">
+      <span class="stat-value">{{ profile.streak_days }}</span>
+      <span class="text-xs text-muted"><span class="label-ar">أيام</span><span class="label-en" style="display:none">days</span></span>
+    </div>
+    <div style="display:flex;gap:0.25rem;">
+      {% for i in streak_range %}
+      <div style="flex:1;height:8px;border-radius:9999px;background:{% if i <= profile.streak_days %}hsl(145,50%,42%){% else %}hsl(150,8%,14%){% endif %};transition:background 0.3s;"></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Quote -->
+<div class="quote-block mb-5" id="quote-block">
+  <span class="quote-ar" id="quote-ar">{{ quote.ar }}</span>
+  <p class="quote-en" id="quote-en">{{ quote.en }}</p>
+</div>
+
+<!-- Domain cards -->
+<div class="mb-5">
+  <h2 class="text-sm font-semibold mb-3">
+    <span class="label-ar">المجالات</span>
+    <span class="label-en" style="display:none">Domains</span>
+  </h2>
+  <div class="domain-grid">
+
+    <a href="{% url 'physical' %}" class="domain-card">
+      <div class="domain-card-top">
+        <div class="domain-icon" style="background:hsl(145 50% 42% / 0.15)">💪</div>
+        <span class="domain-label"><span class="label-ar">الجسد</span><span class="label-en" style="display:none">Physical</span></span>
+      </div>
+      <div class="domain-footer">
+        <span class="domain-pct-label label-ar">الإنجاز</span>
+        <span class="domain-pct-label label-en" style="display:none">Progress</span>
+        <span class="domain-pct-val" style="color:hsl(145,50%,42%)">{{ physical_pct }}%</span>
+      </div>
+      <div class="progress-wrap progress-h2">
+        <div class="progress-bar" style="width:{{ physical_pct }}%;background:hsl(145,50%,42%)"></div>
+      </div>
+    </a>
+
+    <a href="{% url 'knowledge' %}" class="domain-card">
+      <div class="domain-card-top">
+        <div class="domain-icon" style="background:hsl(200 65% 55% / 0.15)">📚</div>
+        <span class="domain-label"><span class="label-ar">المعرفة</span><span class="label-en" style="display:none">Knowledge</span></span>
+      </div>
+      <div class="domain-footer">
+        <span class="domain-pct-label label-ar">الإنجاز</span>
+        <span class="domain-pct-label label-en" style="display:none">Progress</span>
+        <span class="domain-pct-val" style="color:hsl(200,65%,55%)">{{ knowledge_pct }}%</span>
+      </div>
+      <div class="progress-wrap progress-h2">
+        <div class="progress-bar" style="width:{{ knowledge_pct }}%;background:hsl(200,65%,55%)"></div>
+      </div>
+    </a>
+
+    <a href="{% url 'islamic' %}" class="domain-card">
+      <div class="domain-card-top">
+        <div class="domain-icon" style="background:hsl(43 80% 60% / 0.15)">☪</div>
+        <span class="domain-label"><span class="label-ar">الإسلام</span><span class="label-en" style="display:none">Islamic</span></span>
+      </div>
+      <div class="domain-footer">
+        <span class="domain-pct-label label-ar">الإنجاز</span>
+        <span class="domain-pct-label label-en" style="display:none">Progress</span>
+        <span class="domain-pct-val" style="color:hsl(43,80%,60%)">{{ islamic_pct }}%</span>
+      </div>
+      <div class="progress-wrap progress-h2">
+        <div class="progress-bar" style="width:{{ islamic_pct }}%;background:hsl(43,80%,60%)"></div>
+      </div>
+    </a>
+
+    <a href="{% url 'programming' %}" class="domain-card">
+      <div class="domain-card-top">
+        <div class="domain-icon" style="background:hsl(280 55% 60% / 0.15)">⌨</div>
+        <span class="domain-label"><span class="label-ar">البرمجة</span><span class="label-en" style="display:none">Programming</span></span>
+      </div>
+      <div class="domain-footer">
+        <span class="domain-pct-label label-ar">الإنجاز</span>
+        <span class="domain-pct-label label-en" style="display:none">Progress</span>
+        <span class="domain-pct-val" style="color:hsl(280,55%,60%)">{{ programming_pct }}%</span>
+      </div>
+      <div class="progress-wrap progress-h2">
+        <div class="progress-bar" style="width:{{ programming_pct }}%;background:hsl(280,55%,60%)"></div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- Custom Tasks -->
+<div class="tasks-card mb-5">
+  <div class="tasks-card-header">
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <span class="text-sm font-semibold">
+        📋 <span class="label-ar">مهامي اليومية</span><span class="label-en" style="display:none">My Daily Tasks</span>
+      </span>
+      {% if tasks %}
+      <span class="badge">{{ tasks_done }}/{{ tasks|length }}</span>
+      {% endif %}
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="showAddTask()">
+      + <span class="label-ar">أضف مهمة</span><span class="label-en" style="display:none">Add task</span>
+    </button>
+  </div>
+
+  <div id="add-task-form" class="tasks-add-form hidden">
+    <input type="text" id="task-input" placeholder="اكتب مهمة جديدة... / New task..." style="border-radius:0;">
+    <button class="btn btn-primary btn-sm" onclick="addTask()">✓</button>
+    <button class="btn btn-muted btn-sm" onclick="hideAddTask()">✕</button>
+  </div>
+
+  <div id="tasks-list">
+    {% for task in tasks %}
+    <div class="task-row {% if task.done %}done-row{% endif %}" id="task-{{ task.id }}">
+      <div class="task-checkbox {% if task.done %}checked{% endif %}" onclick="toggleTask({{ task.id }}, this)">
+        {% if task.done %}✓{% endif %}
+      </div>
+      <span class="task-label {% if task.done %}done-label{% endif %}">{{ task.label }}</span>
+      <button class="task-delete" onclick="deleteTask({{ task.id }})">✕</button>
+    </div>
+    {% empty %}
+    <div class="tasks-empty" id="no-tasks">
+      <p class="text-sm text-muted label-ar">لا توجد مهام بعد</p>
+      <p class="text-sm text-muted label-en" style="display:none">No tasks yet</p>
+      <p class="text-xs text-muted mt-1 label-ar" style="opacity:0.6">اضغط «أضف مهمة» لإنشاء مهمتك الأولى</p>
+      <p class="text-xs text-muted mt-1 label-en" style="display:none;opacity:0.6">Click "Add task" to create your first one</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if tasks %}
+  <div class="tasks-footer">
+    <div class="tasks-progress">
+      <span class="label-ar">التقدم</span>
+      <span class="label-en" style="display:none">Progress</span>
+      <span>{{ tasks_done }}/{{ tasks|length }} <span class="label-ar">مكتمل</span><span class="label-en" style="display:none">done</span></span>
+    </div>
+    <div class="progress-wrap progress-h2">
+      <div class="progress-bar" id="tasks-prog-bar" style="width:{% if tasks|length > 0 %}{{ tasks_pct }}{% else %}0{% endif %}%"></div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Habit Tracker -->
+<div class="card mb-5">
+  <div class="card-header">
+    <span class="card-title">📅 <span class="label-ar">متابعة العادات</span><span class="label-en" style="display:none">Habit Tracker</span></span>
+  </div>
+  <div class="grid grid-4" style="gap:0.5rem;">
+
+    <a href="{% url 'islamic' %}" class="habit-chip {% if prayers_done == 5 %}done{% endif %}">
+      <div class="habit-chip-dot"></div>
+      <span class="label-ar">الصلوات الخمس</span>
+      <span class="label-en" style="display:none">All 5 Prayers</span>
+      {% if prayers_done == 5 %}<span class="habit-chip-check">✓</span>{% endif %}
+    </a>
+
+    <a href="{% url 'islamic' %}" class="habit-chip {% if progress.morning_adhkar %}done{% endif %}">
+      <div class="habit-chip-dot"></div>
+      <span class="label-ar">أذكار الصباح</span>
+      <span class="label-en" style="display:none">Morning Adhkar</span>
+      {% if progress.morning_adhkar %}<span class="habit-chip-check">✓</span>{% endif %}
+    </a>
+
+    <a href="{% url 'islamic' %}" class="habit-chip {% if progress.evening_adhkar %}done{% endif %}">
+      <div class="habit-chip-dot"></div>
+      <span class="label-ar">أذكار المساء</span>
+      <span class="label-en" style="display:none">Evening Adhkar</span>
+      {% if progress.evening_adhkar %}<span class="habit-chip-check">✓</span>{% endif %}
+    </a>
+
+    <a href="{% url 'physical' %}" class="habit-chip {% if progress.workout_done %}done{% endif %}">
+      <div class="habit-chip-dot"></div>
+      <span class="label-ar">التمرين</span>
+      <span class="label-en" style="display:none">Workout</span>
+      {% if progress.workout_done %}<span class="habit-chip-check">✓</span>{% endif %}
+    </a>
+
+    <a href="{% url 'programming' %}" class="habit-chip {% if progress.coding_minutes >= profile.coding_target %}done{% endif %}">
+      <div class="habit-chip-dot"></div>
+      <span class="label-ar">البرمجة</span>
+      <span class="label-en" style="display:none">Code 1h+</span>
+      {% if progress.coding_minutes >= profile.coding_target %}<span class="habit-chip-check">✓</span>{% endif %}
+    </a>
+
+    <a href="{% url 'knowledge' %}" class="habit-chip {% if progress.reading_minutes >= profile.reading_target %}done{% endif %}">
+      <div class="habit-chip-dot"></div>
+      <span class="label-ar">القراءة</span>
+      <span class="label-en" style="display:none">Reading goal</span>
+      {% if progress.reading_minutes >= profile.reading_target %}<span class="habit-chip-check">✓</span>{% endif %}
+    </a>
+
+    <a href="{% url 'islamic' %}" class="habit-chip {% if progress.quran_pages >= profile.quran_daily_target %}done{% endif %}">
+      <div class="habit-chip-dot"></div>
+      <span class="label-ar">القرآن الكريم</span>
+      <span class="label-en" style="display:none">Quran goal</span>
+      {% if progress.quran_pages >= profile.quran_daily_target %}<span class="habit-chip-check">✓</span>{% endif %}
+    </a>
+
+    <a href="{% url 'physical' %}" class="habit-chip {% if progress.water_glasses >= profile.water_target %}done{% endif %}">
+      <div class="habit-chip-dot"></div>
+      <span class="label-ar">شرب الماء</span>
+      <span class="label-en" style="display:none">Water goal</span>
+      {% if progress.water_glasses >= profile.water_target %}<span class="habit-chip-check">✓</span>{% endif %}
+    </a>
+
+  </div>
+  <p class="text-xs text-muted mt-3" style="opacity:0.5">
+    <span class="label-ar">انقر على أي عادة للانتقال إلى صفحتها</span>
+    <span class="label-en" style="display:none">Click any habit to go to its page</span>
+  </p>
+</div>
+
+<!-- Weekly Chart -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">📈 <span class="label-ar">التقدم الأسبوعي</span><span class="label-en" style="display:none">Weekly Progress</span></span>
+  </div>
+  <canvas id="week-chart" height="120"></canvas>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── Quotes ──
+const QUOTES = [
+  { ar: "إن مع العسر يسرا", en: "Verily, with hardship comes ease" },
+  { ar: "من جد وجد", en: "Whoever strives shall find" },
+  { ar: "العلم نور", en: "Knowledge is light" },
+  { ar: "الصبر مفتاح الفرج", en: "Patience is the key to relief" },
+  { ar: "خير الناس أنفعهم للناس", en: "The best people are those most beneficial to others" },
+];
+let qIdx = Math.floor(Math.random() * QUOTES.length);
+function rotateQuote() {
+  qIdx = (qIdx + 1) % QUOTES.length;
+  document.getElementById('quote-ar').textContent = QUOTES[qIdx].ar;
+  document.getElementById('quote-en').textContent = QUOTES[qIdx].en;
+}
+setInterval(rotateQuote, 8000);
+
+// ── Task management ──
+function showAddTask() {
+  const f = document.getElementById('add-task-form');
+  f.classList.remove('hidden');
+  document.getElementById('task-input').focus();
+}
+function hideAddTask() {
+  document.getElementById('add-task-form').classList.add('hidden');
+  document.getElementById('task-input').value = '';
+}
+
+async function addTask() {
+  const input = document.getElementById('task-input');
+  const label = input.value.trim();
+  if (!label) return;
+  const res = await fetch('/api/custom-tasks/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({ action: 'add', label })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    const noTasks = document.getElementById('no-tasks');
+    if (noTasks) noTasks.remove();
+    const list = document.getElementById('tasks-list');
+    const div = document.createElement('div');
+    div.className = 'task-row';
+    div.id = 'task-' + data.id;
+    div.innerHTML = `
+      <div class="task-checkbox" onclick="toggleTask(${data.id}, this)"></div>
+      <span class="task-label">${data.label}</span>
+      <button class="task-delete" onclick="deleteTask(${data.id})">✕</button>
+    `;
+    list.appendChild(div);
+    input.value = '';
+    hideAddTask();
+    showToast(IS_AR ? '✓ تمت الإضافة' : '✓ Task added');
+  }
+}
+
+async function toggleTask(id, el) {
+  const res = await fetch('/api/custom-tasks/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({ action: 'toggle', id })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    const row = document.getElementById('task-' + id);
+    const label = row.querySelector('.task-label');
+    if (data.done) {
+      el.classList.add('checked'); el.textContent = '✓';
+      row.classList.add('done-row');
+      label.classList.add('done-label');
+    } else {
+      el.classList.remove('checked'); el.textContent = '';
+      row.classList.remove('done-row');
+      label.classList.remove('done-label');
+    }
+  }
+}
+
+async function deleteTask(id) {
+  await fetch('/api/custom-tasks/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({ action: 'delete', id })
+  });
+  const el = document.getElementById('task-' + id);
+  if (el) el.remove();
+}
+
+document.getElementById('task-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+  if (e.key === 'Escape') hideAddTask();
+});
+
+// ── Weekly bar chart ──
+const weekLabels = {{ week_labels|safe }};
+const weekData   = {{ week_data|safe }};
+new Chart(document.getElementById('week-chart'), {
+  type: 'bar',
+  data: {
+    labels: weekLabels,
+    datasets: [{
+      data: weekData,
+      backgroundColor: 'hsl(145 50% 42% / 0.85)',
+      borderRadius: 4,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: 'hsl(150,6%,55%)', font: { size: 11 } }, grid: { display: false }, border: { display: false } },
+      y: { display: false, max: 100 }
+    }
+  }
+});
+</script>
+{% endblock %}

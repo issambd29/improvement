@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block title %}المعرفة{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="label-ar">المعرفة</h1>
+  <h1 class="label-en" style="display:none">Knowledge</h1>
+  <p class="text-muted label-ar">القراءة واللغة الإنجليزية</p>
+  <p class="text-muted label-en" style="display:none">Reading and English practice</p>
+</div>
+
+<div class="space-y">
+
+  <!-- ── Reading ── -->
+  <div class="habit-card {% if progress.reading_minutes >= profile.reading_target %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">📚</div>
+        <span class="label-ar">القراءة اليومية</span>
+        <span class="label-en" style="display:none">Daily Reading</span>
+      </div>
+      <span class="habit-card-badge {% if progress.reading_minutes >= profile.reading_target %}done{% endif %}">
+        <span id="reading-badge">{{ reading_pct }}%</span>
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;">
+        <div>
+          <div class="text-sm font-medium label-ar">دقائق القراءة</div>
+          <div class="text-sm font-medium label-en" style="display:none">Reading Minutes</div>
+          <div class="text-xs text-muted mt-1">
+            <span class="label-ar">الهدف: {{ profile.reading_target }} دقيقة · +40 XP</span>
+            <span class="label-en" style="display:none">Target: {{ profile.reading_target }} min · +40 XP</span>
+          </div>
+        </div>
+        <div class="num-ctrl">
+          <button class="num-btn" onclick="changeReading(-5)">−5</button>
+          <span class="num-val" id="reading-val">{{ progress.reading_minutes }}</span>
+          <button class="num-btn plus" onclick="changeReading(5)">+5</button>
+        </div>
+      </div>
+      <div class="progress-wrap progress-h2 mb-1">
+        <div class="progress-bar prog-gold" id="reading-bar" style="width:{{ reading_pct }}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;" class="text-xs text-muted">
+        <span><span id="reading-val2">{{ progress.reading_minutes }}</span> / {{ profile.reading_target }} <span class="label-ar">دقيقة</span><span class="label-en" style="display:none">min</span></span>
+        <span class="text-accent">{{ reading_pct }}%</span>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <div class="text-xs text-muted mb-2">
+          <span class="label-ar">صفحات الكتاب المقروءة</span>
+          <span class="label-en" style="display:none">Book pages read</span>
+        </div>
+        <div class="num-ctrl">
+          <button class="num-btn" onclick="changePages(-1)">−</button>
+          <span class="num-val" id="pages-val">{{ progress.books_pages }}</span>
+          <button class="num-btn plus" onclick="changePages(1)">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── English ── -->
+  <div class="habit-card {% if progress.english_minutes >= 20 %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">🇬🇧</div>
+        <span class="label-ar">تعلم الإنجليزية</span>
+        <span class="label-en" style="display:none">English Practice</span>
+      </div>
+      <span class="habit-card-badge {% if progress.english_minutes >= 20 %}done{% endif %}">
+        <span id="english-badge">{{ english_pct }}%</span>
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;">
+        <div>
+          <div class="text-sm font-medium label-ar">دقائق التدريب</div>
+          <div class="text-sm font-medium label-en" style="display:none">Practice Minutes</div>
+          <div class="text-xs text-muted mt-1">
+            <span class="label-ar">الهدف: 20 دقيقة · +25 XP</span>
+            <span class="label-en" style="display:none">Target: 20 min · +25 XP</span>
+          </div>
+        </div>
+        <div class="num-ctrl">
+          <button class="num-btn" onclick="changeEnglish(-5)">−5</button>
+          <span class="num-val" id="english-val">{{ progress.english_minutes }}</span>
+          <button class="num-btn plus" onclick="changeEnglish(5)">+5</button>
+        </div>
+      </div>
+      <div class="progress-wrap progress-h2 mb-3">
+        <div class="progress-bar prog-blue" id="english-bar" style="width:{{ english_pct }}%"></div>
+      </div>
+
+      <div class="text-xs text-muted mb-2 label-ar">أضف نشاطاً سريعاً</div>
+      <div class="text-xs text-muted mb-2 label-en" style="display:none">Quick add activity</div>
+      <div class="chip-group">
+        {% for activity in english_activities %}
+        <button class="chip" onclick="addEnglishActivity({{ activity.mins }}, this)">
+          {{ activity.icon }} <span class="label-ar">{{ activity.label_ar }}</span><span class="label-en" style="display:none">{{ activity.label }}</span>
+          ({{ activity.mins }}<span class="label-ar">دق</span><span class="label-en" style="display:none">m</span>)
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let readingVal = {{ progress.reading_minutes }};
+let pagesVal = {{ progress.books_pages }};
+let englishVal = {{ progress.english_minutes }};
+const readingTarget = {{ profile.reading_target }};
+
+async function changeReading(delta) {
+  readingVal = Math.max(0, readingVal + delta);
+  document.getElementById('reading-val').textContent = readingVal;
+  document.getElementById('reading-val2').textContent = readingVal;
+  const pct = Math.min(100, Math.round((readingVal / readingTarget) * 100));
+  document.getElementById('reading-bar').style.width = pct + '%';
+  document.getElementById('reading-badge').textContent = pct + '%';
+  const res = await apiUpdate('reading_minutes', readingVal);
+  if (res.ok && readingVal >= readingTarget) showXpPopup(40);
+}
+
+async function changePages(delta) {
+  pagesVal = Math.max(0, pagesVal + delta);
+  document.getElementById('pages-val').textContent = pagesVal;
+  await apiUpdate('books_pages', pagesVal);
+}
+
+async function changeEnglish(delta) {
+  englishVal = Math.max(0, englishVal + delta);
+  document.getElementById('english-val').textContent = englishVal;
+  const pct = Math.min(100, Math.round((englishVal / 20) * 100));
+  document.getElementById('english-bar').style.width = pct + '%';
+  document.getElementById('english-badge').textContent = pct + '%';
+  const res = await apiUpdate('english_minutes', englishVal);
+  if (res.ok && englishVal >= 20) showXpPopup(25);
+}
+
+async function addEnglishActivity(mins, btn) {
+  englishVal += parseInt(mins);
+  document.getElementById('english-val').textContent = englishVal;
+  const pct = Math.min(100, Math.round((englishVal / 20) * 100));
+  document.getElementById('english-bar').style.width = pct + '%';
+  document.getElementById('english-badge').textContent = pct + '%';
+  await apiUpdate('english_minutes', englishVal);
+}
+</script>
+{% endblock %}

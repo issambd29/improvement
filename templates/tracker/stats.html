@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}الإحصائيات{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="label-ar">الإحصائيات</h1>
+  <h1 class="label-en" style="display:none">Statistics</h1>
+  <p class="text-muted label-ar">تحليل تقدمك على مدى 30 يومًا</p>
+  <p class="text-muted label-en" style="display:none">Your 30-day progress analysis</p>
+</div>
+
+<div class="stat-grid-4 mb-5">
+  <div class="stat-card">
+    <div class="stat-label">⚡ <span class="label-ar">مجموع XP</span><span class="label-en" style="display:none">Total XP</span></div>
+    <div class="stat-value text-primary" id="s-totalxp">{{ profile.total_xp }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label"><span class="label-ar">المستوى</span><span class="label-en" style="display:none">Level</span></div>
+    <div class="stat-value text-accent">{{ profile.get_level }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">🔥 <span class="label-ar">سلسلة الأيام</span><span class="label-en" style="display:none">Day Streak</span></div>
+    <div class="stat-value text-accent">{{ profile.streak_days }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label"><span class="label-ar">متوسط XP يومي</span><span class="label-en" style="display:none">Avg Daily XP</span></div>
+    <div class="stat-value" id="s-avgxp">—</div>
+  </div>
+</div>
+
+<div class="grid grid-2 mb-5">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">⚡ <span class="label-ar">نقاط XP اليومية</span><span class="label-en" style="display:none">Daily XP</span></span>
+    </div>
+    <canvas id="chart-xp" height="180"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">☪ <span class="label-ar">الصلوات اليومية</span><span class="label-en" style="display:none">Daily Prayers</span></span>
+    </div>
+    <canvas id="chart-prayers" height="180"></canvas>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">😴 <span class="label-ar">ساعات النوم</span><span class="label-en" style="display:none">Sleep Hours</span></span>
+    </div>
+    <canvas id="chart-sleep" height="180"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">⌨ <span class="label-ar">دقائق البرمجة</span><span class="label-en" style="display:none">Coding Minutes</span></span>
+    </div>
+    <canvas id="chart-coding" height="180"></canvas>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const MUTED    = 'hsl(150,6%,55%)';
+const BORDER   = 'hsl(150,10%,18%)';
+const PRIMARY  = 'hsl(145,50%,42%)';
+const ACCENT   = 'hsl(43,80%,60%)';
+const BLUE     = 'hsl(200,65%,55%)';
+const PURPLE   = 'hsl(280,55%,60%)';
+
+Chart.defaults.color       = MUTED;
+Chart.defaults.borderColor = BORDER;
+
+function makeChart(id, data, labels, color, type = 'bar') {
+  return new Chart(document.getElementById(id), {
+    type,
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: type === 'bar' ? color + 'cc' : color + '22',
+        borderColor: color,
+        borderWidth: type === 'line' ? 2 : 0,
+        borderRadius: type === 'bar' ? 4 : 0,
+        fill: type === 'line',
+        tension: 0.4,
+        pointRadius: type === 'line' ? 2 : 0,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { color: MUTED, font: { size: 10 }, maxTicksLimit: 7 } },
+        y: { grid: { color: BORDER }, border: { display: false }, ticks: { color: MUTED }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+async function loadStats() {
+  const res = await fetch('/api/stats-data/?days=30');
+  const d = await res.json();
+  const nonzero = d.xp.filter(x => x > 0);
+  const avg = nonzero.length ? Math.round(nonzero.reduce((a,b) => a+b, 0) / nonzero.length) : 0;
+  document.getElementById('s-avgxp').textContent = avg || '—';
+  makeChart('chart-xp',      d.xp,     d.labels, PRIMARY);
+  makeChart('chart-prayers', d.prayers, d.labels, ACCENT);
+  makeChart('chart-sleep',   d.sleep,   d.labels, BLUE,   'line');
+  makeChart('chart-coding',  d.coding,  d.labels, PURPLE);
+}
+loadStats();
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الارتقاء — نظام التطور الذاتي</title>
+  <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  <style>body { display: block; }</style>
+</head>
+<body>
+  <div class="hero">
+    <img src="{% static 'img/logo.png' %}" alt="logo" class="hero-logo">
+    <div class="hero-tag">Islamic Self-Improvement System</div>
+    <h1 class="hero-title">الارتقاء</h1>
+    <p class="hero-desc">تتبع صلاتك ولياقتك ومعرفتك وبرمجتك — كل شيء في نظام موحد واحد جميل.</p>
+    <div class="hero-pills">
+      <span class="pill">📖 القرآن الكريم</span>
+      <span class="pill">💪 اللياقة البدنية</span>
+      <span class="pill">🕌 الصلاة</span>
+      <span class="pill">⌨ البرمجة</span>
+      <span class="pill">📚 المعرفة</span>
+      <span class="pill">⭐ نظام XP</span>
+    </div>
+    <div class="hero-btns">
+      <a href="{% url 'register' %}" class="hero-btn-primary">ابدأ مجانًا</a>
+      <a href="{% url 'login' %}" class="hero-btn-secondary">تسجيل الدخول</a>
+    </div>
+    <div class="ayah">
+      <div class="ayah-text">﴿إِنَّ مَعَ الْعُسْرِ يُسْرًا﴾</div>
+      <div class="ayah-sub">Verily, with hardship comes ease — 94:6</div>
+    </div>
+  </div>
+</body>
+</html>

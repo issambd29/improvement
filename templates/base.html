@@ -1,0 +1,211 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ request.user.profile.language|default:'ar' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الارتقاء — {% block title %}{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'img/logo.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <a href="{% url 'dashboard' %}" style="text-decoration:none">
+      <div>
+        <h1 class="label-ar">نظام التطور</h1>
+        <h1 class="label-en" style="display:none">Self OS</h1>
+        <p class="label-ar">كن أفضل نسخة من نفسك</p>
+        <p class="label-en" style="display:none">Daily growth system</p>
+      </div>
+    </a>
+    <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
+  </div>
+
+  <!-- User card -->
+  <div class="sidebar-user-card">
+    <div class="sidebar-avatar">{{ request.user.username|slice:":2"|upper }}</div>
+    <div style="min-width:0;flex:1;">
+      <div class="sidebar-user-name">{{ request.user.username }}</div>
+      <div class="sidebar-user-sub">
+        <span class="label-ar">عضو نشط</span>
+        <span class="label-en" style="display:none">Active member</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Level card -->
+  <div class="sidebar-level-card">
+    <div class="sidebar-level-header">
+      <span class="sidebar-level-name" id="sb-level-name">
+        <span class="label-ar">المستوى </span>
+        <span class="label-en" style="display:none">Level </span>
+        <span id="sb-level">{{ profile.get_level }}</span>
+      </span>
+      <span class="sidebar-xp-val" id="sb-xp-val">{{ profile.total_xp|floatformat:"0" }} XP</span>
+    </div>
+    <div class="sidebar-level-bar-wrap">
+      <div class="sidebar-level-bar" id="sb-xp-bar" style="width:{{ profile.get_level_progress_pct }}%"></div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+    <a href="{% url 'dashboard' %}" class="nav-link {% if page == 'dashboard' %}active{% endif %}">
+      <span class="nav-icon">⊞</span>
+      <span class="label-ar">لوحة التحكم</span>
+      <span class="label-en" style="display:none">Dashboard</span>
+    </a>
+    <a href="{% url 'physical' %}" class="nav-link {% if page == 'physical' %}active{% endif %}">
+      <span class="nav-icon">💪</span>
+      <span class="label-ar">الجسد</span>
+      <span class="label-en" style="display:none">Physical</span>
+    </a>
+    <a href="{% url 'knowledge' %}" class="nav-link {% if page == 'knowledge' %}active{% endif %}">
+      <span class="nav-icon">📚</span>
+      <span class="label-ar">المعرفة</span>
+      <span class="label-en" style="display:none">Knowledge</span>
+    </a>
+    <a href="{% url 'islamic' %}" class="nav-link {% if page == 'islamic' %}active{% endif %}">
+      <span class="nav-icon">☪</span>
+      <span class="label-ar">الإسلام</span>
+      <span class="label-en" style="display:none">Islamic</span>
+    </a>
+    <a href="{% url 'programming' %}" class="nav-link {% if page == 'programming' %}active{% endif %}">
+      <span class="nav-icon">⌨</span>
+      <span class="label-ar">البرمجة</span>
+      <span class="label-en" style="display:none">Programming</span>
+    </a>
+    <a href="{% url 'stats' %}" class="nav-link {% if page == 'stats' %}active{% endif %}">
+      <span class="nav-icon">📊</span>
+      <span class="label-ar">الإحصائيات</span>
+      <span class="label-en" style="display:none">Statistics</span>
+    </a>
+    <a href="{% url 'achievements' %}" class="nav-link {% if page == 'achievements' %}active{% endif %}">
+      <span class="nav-icon">🏆</span>
+      <span class="label-ar">الإنجازات</span>
+      <span class="label-en" style="display:none">Achievements</span>
+    </a>
+    <a href="{% url 'settings' %}" class="nav-link {% if page == 'settings' %}active{% endif %}">
+      <span class="nav-icon">⚙️</span>
+      <span class="label-ar">الإعدادات</span>
+      <span class="label-en" style="display:none">Settings</span>
+    </a>
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <p class="sidebar-footer-quote">إن مع العسر يسرا</p>
+    <a href="{% url 'logout' %}" class="sidebar-logout">
+      <span>↪</span>
+      <span class="label-ar">تسجيل الخروج</span>
+      <span class="label-en" style="display:none">Sign out</span>
+    </a>
+  </div>
+
+</aside>
+
+<!-- Mobile topbar -->
+<div class="mobile-topbar" id="mobile-topbar">
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <span class="mobile-topbar-title">الارتقاء</span>
+  <span class="mobile-topbar-lvl" id="mob-lvl">⭐ Lv.{{ profile.get_level }}</span>
+</div>
+
+<!-- Main -->
+<main class="main">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Bottom nav (mobile) -->
+<nav class="bottom-nav">
+  <a href="{% url 'dashboard' %}" class="{% if page == 'dashboard' %}active{% endif %}"><span>⊞</span><span>Dashboard</span></a>
+  <a href="{% url 'physical' %}"  class="{% if page == 'physical'  %}active{% endif %}"><span>💪</span><span>Physical</span></a>
+  <a href="{% url 'islamic' %}"   class="{% if page == 'islamic'   %}active{% endif %}"><span>☪</span><span>Islamic</span></a>
+  <a href="{% url 'knowledge' %}" class="{% if page == 'knowledge' %}active{% endif %}"><span>📚</span><span>Knowledge</span></a>
+  <a href="{% url 'programming' %}" class="{% if page == 'programming' %}active{% endif %}"><span>⌨</span><span>Code</span></a>
+</nav>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- XP Popup -->
+<div class="xp-popup" id="xp-popup">
+  <div class="xp-popup-val" id="xp-popup-val">+0 XP</div>
+  <div class="xp-popup-label">
+    <span class="label-ar">نقاط مكتسبة!</span>
+    <span class="label-en" style="display:none">XP Earned!</span>
+  </div>
+</div>
+
+<script>
+const LANG = document.documentElement.lang || 'ar';
+const IS_AR = LANG === 'ar';
+const CSRF = "{{ csrf_token }}";
+
+function applyLang() {
+  document.querySelectorAll('.label-ar').forEach(el => el.style.display = IS_AR ? '' : 'none');
+  document.querySelectorAll('.label-en').forEach(el => el.style.display = IS_AR ? 'none' : '');
+}
+applyLang();
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showXpPopup(amount) {
+  const p = document.getElementById('xp-popup');
+  document.getElementById('xp-popup-val').textContent = '+' + amount + ' XP';
+  p.classList.add('show');
+  setTimeout(() => p.classList.remove('show'), 1800);
+}
+
+async function apiUpdate(field, value) {
+  const res = await fetch('/api/update/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({ field, value })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    updateSidebarXP(data.total_xp, data.level, data.level_pct);
+    showToast(IS_AR ? '✓ تم الحفظ' : '✓ Saved');
+  }
+  return data;
+}
+
+function updateSidebarXP(totalXp, level, pct) {
+  const lvlEl = document.getElementById('sb-level');
+  const barEl = document.getElementById('sb-xp-bar');
+  const xpVal = document.getElementById('sb-xp-val');
+  const mobLvl = document.getElementById('mob-lvl');
+  if (lvlEl) lvlEl.textContent = level;
+  if (barEl) barEl.style.width = pct + '%';
+  if (xpVal) xpVal.textContent = totalXp.toLocaleString() + ' XP';
+  if (mobLvl) mobLvl.textContent = '⭐ Lv.' + level;
+}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
