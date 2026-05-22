@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}الإنجازات{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="label-ar">الإنجازات</h1>
+  <h1 class="label-en" style="display:none">Achievements</h1>
+  <p class="text-muted">
+    <span class="label-ar">{{ unlocked_count }} من {{ total_count }} إنجاز مفتوح</span>
+    <span class="label-en" style="display:none">{{ unlocked_count }} of {{ total_count }} unlocked</span>
+  </p>
+</div>
+
+<div class="card mb-5" style="padding:1rem 1.25rem;">
+  <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;" class="text-xs text-muted">
+    <span class="label-ar">التقدم</span>
+    <span class="label-en" style="display:none">Progress</span>
+    <span class="text-primary font-semibold">{{ unlocked_count }}/{{ total_count }}</span>
+  </div>
+  <div class="progress-wrap progress-h3">
+    <div class="progress-bar prog-gold" style="width:{% widthratio unlocked_count total_count 100 %}%"></div>
+  </div>
+</div>
+
+<div class="grid grid-2" style="gap:0.75rem;">
+  {% for a in achievements %}
+  <div class="achievement {% if a.unlocked %}unlocked{% endif %}">
+    <div class="ach-icon">{{ a.icon }}</div>
+    <div class="ach-body">
+      <div class="ach-title">
+        <span class="label-ar">{{ a.title_ar }}</span>
+        <span class="label-en" style="display:none">{{ a.title_en }}</span>
+      </div>
+      <div class="ach-desc">
+        <span class="label-ar">{{ a.desc_ar }}</span>
+        <span class="label-en" style="display:none">{{ a.desc_en }}</span>
+      </div>
+    </div>
+    <span class="ach-badge {% if a.unlocked %}done{% else %}locked{% endif %}">
+      {% if a.unlocked %}
+        <span class="label-ar">مفتوح ✓</span>
+        <span class="label-en" style="display:none">Unlocked ✓</span>
+      {% else %}
+        <span class="label-ar">مقفل 🔒</span>
+        <span class="label-en" style="display:none">Locked 🔒</span>
+      {% endif %}
+    </span>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block title %}الجسد{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="label-ar">الجسد</h1>
+  <h1 class="label-en" style="display:none">Physical</h1>
+  <p class="text-muted label-ar">التمرين والنوم والماء</p>
+  <p class="text-muted label-en" style="display:none">Workout, sleep and hydration</p>
+</div>
+
+<div class="space-y">
+
+  <!-- ── Workout ── -->
+  <div class="habit-card {% if progress.workout_done %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">💪</div>
+        <span class="label-ar">التمرين اليومي</span>
+        <span class="label-en" style="display:none">Daily Workout</span>
+      </div>
+      <span class="habit-card-badge {% if progress.workout_done %}done{% endif %}">
+        {% if progress.workout_done %}✓ <span class="label-ar">مكتمل</span><span class="label-en" style="display:none">Done</span>{% else %}+50 XP{% endif %}
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div class="check-row mb-3" onclick="toggleWorkout(this)">
+        <div class="check-box {% if progress.workout_done %}checked{% endif %}" id="chk-workout">{% if progress.workout_done %}✓{% endif %}</div>
+        <div style="flex:1">
+          <div class="check-label label-ar">أتممت التمرين اليوم</div>
+          <div class="check-label label-en" style="display:none">Completed workout today</div>
+          <div class="check-sub">+50 XP</div>
+        </div>
+      </div>
+
+      <div class="text-xs text-muted mb-2 label-ar">نوع التمرين</div>
+      <div class="text-xs text-muted mb-2 label-en" style="display:none">Workout Type</div>
+      <div class="chip-group mb-3">
+        {% for wtype in workout_types %}
+        <button class="chip {% if progress.workout_type == wtype %}active{% endif %}"
+                onclick="selectWorkoutType('{{ wtype }}', this)">{{ wtype }}</button>
+        {% endfor %}
+      </div>
+      <input type="text" id="workout-custom" placeholder="أو اكتب نوع التمرين... / or type workout..." value="{{ progress.workout_type }}"
+             oninput="debounceWorkoutType(this.value)">
+    </div>
+  </div>
+
+  <!-- ── Sleep ── -->
+  <div class="habit-card {% if progress.sleep_hours >= profile.sleep_target %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">😴</div>
+        <span class="label-ar">ساعات النوم</span>
+        <span class="label-en" style="display:none">Sleep Hours</span>
+      </div>
+      <span class="habit-card-badge {% if progress.sleep_hours >= profile.sleep_target %}done{% endif %}">
+        <span id="sleep-badge">{{ progress.sleep_hours }}h</span>
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+        <div>
+          <div class="text-sm font-medium label-ar">النوم الليلة</div>
+          <div class="text-sm font-medium label-en" style="display:none">Last night</div>
+          <div class="text-xs text-muted mt-1">
+            <span class="label-ar">الهدف: {{ profile.sleep_target }}h · +30 XP</span>
+            <span class="label-en" style="display:none">Target: {{ profile.sleep_target }}h · +30 XP</span>
+          </div>
+        </div>
+        <div class="num-ctrl">
+          <button class="num-btn" onclick="changeSleep(-0.5)">−</button>
+          <span class="num-val" id="sleep-val">{{ progress.sleep_hours }}h</span>
+          <button class="num-btn plus" onclick="changeSleep(0.5)">+</button>
+        </div>
+      </div>
+      <input type="range" min="0" max="12" step="0.5" value="{{ progress.sleep_hours }}"
+             id="sleep-range" oninput="updateSleepRange(this.value)" style="margin-bottom:0.5rem;">
+      <div style="display:flex;justify-content:space-between;" class="text-xs text-muted">
+        <span>0h</span>
+        <span class="{% if progress.sleep_hours >= profile.sleep_target %}text-primary{% endif %}">
+          <span class="label-ar">الهدف: {{ profile.sleep_target }}h</span>
+          <span class="label-en" style="display:none">Target: {{ profile.sleep_target }}h</span>
+        </span>
+        <span>12h</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Water ── -->
+  <div class="habit-card {% if progress.water_glasses >= profile.water_target %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">💧</div>
+        <span class="label-ar">شرب الماء</span>
+        <span class="label-en" style="display:none">Water Intake</span>
+      </div>
+      <span class="habit-card-badge {% if progress.water_glasses >= profile.water_target %}done{% endif %}">
+        <span id="water-badge"><span id="water-count2">{{ progress.water_glasses }}</span>/{{ profile.water_target }}</span>
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div style="text-align:center;margin-bottom:1rem;">
+        <div style="font-size:3rem;margin-bottom:0.5rem;line-height:1.4;cursor:pointer;">
+          {% for i in water_range %}
+          <span id="drop-{{ i }}" onclick="setWater({{ i }})"
+                style="opacity:{% if i <= progress.water_glasses %}1{% else %}0.2{% endif %};transition:opacity 0.2s;">💧</span>
+          {% endfor %}
+        </div>
+        <div style="font-size:1.75rem;font-weight:700;color:hsl(200,65%,55%);">
+          <span id="water-count">{{ progress.water_glasses }}</span>
+          <span style="font-size:1rem;color:var(--muted-fg);font-weight:400;"> / {{ profile.water_target }}</span>
+        </div>
+        <div class="text-xs text-muted mt-1">
+          <span class="label-ar">أكواب · الهدف {{ profile.water_target }} (+20 XP)</span>
+          <span class="label-en" style="display:none">glasses · target {{ profile.water_target }} (+20 XP)</span>
+        </div>
+      </div>
+      <div class="progress-wrap progress-h2">
+        <div class="progress-bar prog-blue" id="water-bar" style="width:{{ water_pct }}%"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let sleepVal = {{ progress.sleep_hours }};
+const sleepTarget = {{ profile.sleep_target }};
+let waterVal = {{ progress.water_glasses }};
+const waterTarget = {{ profile.water_target }};
+let workoutDebounce;
+
+async function toggleWorkout(row) {
+  const box = document.getElementById('chk-workout');
+  const isDone = box.classList.contains('checked');
+  const res = await apiUpdate('workout_done', !isDone);
+  if (res.ok) {
+    if (isDone) { box.classList.remove('checked'); box.textContent = ''; }
+    else        { box.classList.add('checked'); box.textContent = '✓'; showXpPopup(50); }
+  }
+}
+
+function selectWorkoutType(type, btn) {
+  document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('workout-custom').value = type;
+  apiUpdate('workout_type', type);
+}
+
+function debounceWorkoutType(val) {
+  clearTimeout(workoutDebounce);
+  workoutDebounce = setTimeout(() => apiUpdate('workout_type', val), 800);
+}
+
+async function changeSleep(delta) {
+  sleepVal = Math.max(0, Math.min(12, sleepVal + delta));
+  document.getElementById('sleep-val').textContent = sleepVal + 'h';
+  document.getElementById('sleep-badge').textContent = sleepVal + 'h';
+  document.getElementById('sleep-range').value = sleepVal;
+  const res = await apiUpdate('sleep_hours', sleepVal);
+  if (res.ok && sleepVal >= sleepTarget) showXpPopup(30);
+}
+
+function updateSleepRange(val) {
+  sleepVal = parseFloat(val);
+  document.getElementById('sleep-val').textContent = sleepVal + 'h';
+  document.getElementById('sleep-badge').textContent = sleepVal + 'h';
+  clearTimeout(updateSleepRange._t);
+  updateSleepRange._t = setTimeout(() => apiUpdate('sleep_hours', sleepVal), 600);
+}
+
+async function setWater(n) {
+  waterVal = n;
+  document.getElementById('water-count').textContent = n;
+  document.getElementById('water-count2').textContent = n;
+  const pct = Math.min(100, Math.round((n / waterTarget) * 100));
+  document.getElementById('water-bar').style.width = pct + '%';
+  for (let i = 1; i <= waterTarget; i++) {
+    const el = document.getElementById('drop-' + i);
+    if (el) el.style.opacity = i <= n ? '1' : '0.2';
+  }
+  const res = await apiUpdate('water_glasses', n);
+  if (res.ok && n >= waterTarget) showXpPopup(20);
+}
+</script>
+{% endblock %}

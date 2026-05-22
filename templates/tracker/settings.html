@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}الإعدادات{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="label-ar">الإعدادات</h1>
+  <h1 class="label-en" style="display:none">Settings</h1>
+  <p class="text-muted label-ar">تخصيص تجربتك</p>
+  <p class="text-muted label-en" style="display:none">Customize your experience</p>
+</div>
+
+<div class="grid grid-2" style="gap:1.25rem;max-width:820px;">
+
+  <!-- Language -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🌐 <span class="label-ar">اللغة</span><span class="label-en" style="display:none">Language</span></span>
+    </div>
+    <div style="display:flex;gap:0.75rem;">
+      <button class="btn {% if profile.language == 'ar' %}btn-primary{% else %}btn-ghost{% endif %} lang-btn"
+              onclick="setLang('ar', this)">🇸🇦 العربية</button>
+      <button class="btn {% if profile.language == 'en' %}btn-primary{% else %}btn-ghost{% endif %} lang-btn"
+              onclick="setLang('en', this)">🇬🇧 English</button>
+    </div>
+  </div>
+
+  <!-- Account info -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">👤 <span class="label-ar">معلومات الحساب</span><span class="label-en" style="display:none">Account</span></span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.625rem;" class="text-sm">
+      <div><span class="text-muted">User:</span> <strong>{{ request.user.username }}</strong></div>
+      <div><span class="text-muted">Level:</span> <strong class="text-accent">{{ profile.get_level }}</strong></div>
+      <div><span class="text-muted">Total XP:</span> <strong class="text-primary">{{ profile.total_xp }}</strong></div>
+      <div><span class="text-muted">Streak:</span> <strong>🔥 {{ profile.streak_days }}</strong></div>
+    </div>
+    <div style="margin-top:1.25rem;">
+      <a href="{% url 'logout' %}" class="btn btn-danger btn-full">
+        <span class="label-ar">تسجيل الخروج</span>
+        <span class="label-en" style="display:none">Sign Out</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Daily Targets -->
+  <div class="card" style="grid-column:1/-1;">
+    <div class="card-header">
+      <span class="card-title">🎯 <span class="label-ar">الأهداف اليومية</span><span class="label-en" style="display:none">Daily Targets</span></span>
+    </div>
+    <div class="grid grid-2" style="gap:1rem;">
+
+      <div class="form-group">
+        <label class="form-label">
+          📖 <span class="label-ar">صفحات القرآن / يوم</span><span class="label-en" style="display:none">Quran Pages / Day</span>
+        </label>
+        <input type="number" min="1" max="30" value="{{ profile.quran_daily_target }}"
+               onchange="updateSetting('quran_daily_target', this.value)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          😴 <span class="label-ar">هدف النوم (ساعات)</span><span class="label-en" style="display:none">Sleep Target (hours)</span>
+        </label>
+        <input type="number" min="4" max="12" step="0.5" value="{{ profile.sleep_target }}"
+               onchange="updateSetting('sleep_target', this.value)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          💧 <span class="label-ar">هدف الماء (أكواس)</span><span class="label-en" style="display:none">Water Target (glasses)</span>
+        </label>
+        <input type="number" min="4" max="16" value="{{ profile.water_target }}"
+               onchange="updateSetting('water_target', this.value)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          📚 <span class="label-ar">هدف القراءة (دقائق)</span><span class="label-en" style="display:none">Reading Target (min)</span>
+        </label>
+        <input type="number" min="10" max="180" step="5" value="{{ profile.reading_target }}"
+               onchange="updateSetting('reading_target', this.value)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          ⌨ <span class="label-ar">هدف البرمجة (دقائق)</span><span class="label-en" style="display:none">Coding Target (min)</span>
+        </label>
+        <input type="number" min="15" max="480" step="15" value="{{ profile.coding_target }}"
+               onchange="updateSetting('coding_target', this.value)">
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function setLang(lang, btn) {
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.remove('btn-primary'); b.classList.add('btn-ghost');
+  });
+  btn.classList.add('btn-primary'); btn.classList.remove('btn-ghost');
+  await fetch('/api/settings/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({ language: lang })
+  });
+  document.documentElement.lang = lang;
+  applyLang();
+  showToast(lang === 'ar' ? '✓ تم تغيير اللغة' : '✓ Language changed');
+}
+
+let settingsDebounce = {};
+async function updateSetting(key, value) {
+  clearTimeout(settingsDebounce[key]);
+  settingsDebounce[key] = setTimeout(async () => {
+    const body = {}; body[key] = value;
+    const res = await fetch('/api/settings/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.ok) showToast(IS_AR ? '✓ تم الحفظ' : '✓ Saved');
+  }, 600);
+}
+</script>
+{% endblock %}

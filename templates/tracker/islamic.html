@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% block title %}الإسلام{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1 class="label-ar amiri">الأهداف الإسلامية</h1>
+  <h1 class="label-en" style="display:none">Islamic Goals</h1>
+  <p class="text-muted label-ar">قرّب نفسك من الله</p>
+  <p class="text-muted label-en" style="display:none">Draw closer to Allah</p>
+</div>
+
+<div class="space-y">
+
+  <!-- ── Prayers ── -->
+  <div class="habit-card {% if prayers_done == 5 %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">🌙</div>
+        <span class="label-ar">الصلاة</span>
+        <span class="label-en" style="display:none">Prayer</span>
+      </div>
+      <span class="habit-card-badge {% if prayers_done == 5 %}done{% endif %}">
+        {% if prayers_done == 5 %}✓ <span class="label-ar">مكتمل</span><span class="label-en" style="display:none">Done</span>
+        {% else %}<span id="prayer-count">{{ prayers_done }}</span>/5{% endif %}
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div class="prayers-grid mb-3">
+        <div class="prayer-btn {% if progress.fajr %}done{% endif %}" id="pray-fajr" onclick="togglePrayer('fajr', this)">
+          <span class="prayer-icon">🌅</span>
+          <span class="prayer-name">الفجر</span>
+          <span class="prayer-eng">Fajr</span>
+        </div>
+        <div class="prayer-btn {% if progress.dhuhr %}done{% endif %}" id="pray-dhuhr" onclick="togglePrayer('dhuhr', this)">
+          <span class="prayer-icon">☀️</span>
+          <span class="prayer-name">الظهر</span>
+          <span class="prayer-eng">Dhuhr</span>
+        </div>
+        <div class="prayer-btn {% if progress.asr %}done{% endif %}" id="pray-asr" onclick="togglePrayer('asr', this)">
+          <span class="prayer-icon">🌤️</span>
+          <span class="prayer-name">العصر</span>
+          <span class="prayer-eng">Asr</span>
+        </div>
+        <div class="prayer-btn {% if progress.maghrib %}done{% endif %}" id="pray-maghrib" onclick="togglePrayer('maghrib', this)">
+          <span class="prayer-icon">🌆</span>
+          <span class="prayer-name">المغرب</span>
+          <span class="prayer-eng">Maghrib</span>
+        </div>
+        <div class="prayer-btn {% if progress.isha %}done{% endif %}" id="pray-isha" onclick="togglePrayer('isha', this)">
+          <span class="prayer-icon">🌙</span>
+          <span class="prayer-name">العشاء</span>
+          <span class="prayer-eng">Isha</span>
+        </div>
+      </div>
+      <div class="text-xs text-muted text-center">
+        <span class="label-ar">صليت <strong class="text-primary" id="prayer-done-count">{{ prayers_done }}</strong> من 5 صلوات اليوم · +20 XP لكل صلاة</span>
+        <span class="label-en" style="display:none">Prayed <strong class="text-primary" id="prayer-done-count2">{{ prayers_done }}</strong> of 5 today · +20 XP each</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Quran ── -->
+  <div class="habit-card {% if progress.quran_pages >= profile.quran_daily_target %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">📖</div>
+        <span class="label-ar">القرآن الكريم</span>
+        <span class="label-en" style="display:none">Quran</span>
+      </div>
+      <span class="habit-card-badge {% if progress.quran_pages >= profile.quran_daily_target %}done{% endif %}">
+        <span id="quran-badge">{{ quran_pct }}%</span>
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.875rem;">
+        <div>
+          <div class="text-xs text-muted label-ar">عدد الصفحات المقروءة اليوم</div>
+          <div class="text-xs text-muted label-en" style="display:none">Pages read today</div>
+          <div class="text-xs text-muted mt-1">
+            <span class="label-ar">الهدف: {{ profile.quran_daily_target }} صفحة · +10 XP/صفحة</span>
+            <span class="label-en" style="display:none">Target: {{ profile.quran_daily_target }} pages · +10 XP/page</span>
+          </div>
+        </div>
+        <div class="num-ctrl">
+          <button class="num-btn" onclick="changeNum('quran_pages', -1)">−</button>
+          <span class="num-val" id="quran-val">{{ progress.quran_pages }}</span>
+          <button class="num-btn plus" onclick="changeNum('quran_pages', 1)">+</button>
+        </div>
+      </div>
+      <div class="progress-wrap progress-h2 mb-1">
+        <div class="progress-bar prog-gold" id="quran-bar" style="width:{{ quran_pct }}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;" class="text-xs text-muted">
+        <span><span id="quran-val2">{{ progress.quran_pages }}</span> / {{ profile.quran_daily_target }} <span class="label-ar">صفحة</span><span class="label-en" style="display:none">pages</span></span>
+        <span class="text-accent" id="quran-pct">{{ quran_pct }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Adhkar ── -->
+  <div class="habit-card {% if progress.morning_adhkar and progress.evening_adhkar %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">⭐</div>
+        <span class="label-ar">الأذكار</span>
+        <span class="label-en" style="display:none">Adhkar</span>
+      </div>
+      <span class="habit-card-badge {% if progress.morning_adhkar and progress.evening_adhkar %}done{% endif %}">
+        {% if progress.morning_adhkar and progress.evening_adhkar %}✓ <span class="label-ar">مكتمل</span><span class="label-en" style="display:none">Done</span>{% else %}<span class="label-ar">جارٍ</span><span class="label-en" style="display:none">In progress</span>{% endif %}
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div class="check-row" onclick="toggleCheck('morning_adhkar', this)">
+        <div class="check-box {% if progress.morning_adhkar %}checked{% endif %}" id="chk-morning_adhkar">{% if progress.morning_adhkar %}✓{% endif %}</div>
+        <div style="flex:1">
+          <div class="check-label amiri label-ar">أذكار الصباح</div>
+          <div class="check-label label-en" style="display:none">Morning Adhkar</div>
+          <div class="check-sub">+15 XP</div>
+        </div>
+      </div>
+      <div class="check-row" onclick="toggleCheck('evening_adhkar', this)">
+        <div class="check-box {% if progress.evening_adhkar %}checked{% endif %}" id="chk-evening_adhkar">{% if progress.evening_adhkar %}✓{% endif %}</div>
+        <div style="flex:1">
+          <div class="check-label amiri label-ar">أذكار المساء</div>
+          <div class="check-label label-en" style="display:none">Evening Adhkar</div>
+          <div class="check-sub">+15 XP</div>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <div class="text-xs text-muted mb-2 label-ar">عدادات الأذكار</div>
+        <div class="text-xs text-muted mb-2 label-en" style="display:none">Dhikr Counters</div>
+
+        <div class="zikr-row">
+          <span class="text-sm font-medium amiri label-ar">الاستغفار</span>
+          <span class="text-sm font-medium label-en" style="display:none">Istighfar</span>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span class="zikr-count" id="istighfar-count">{{ progress.istighfar_count|default:0 }}</span>
+            <button class="zikr-btn" onclick="tapZikr('istighfar_count', 'istighfar-count')">+</button>
+          </div>
+        </div>
+
+        <div class="zikr-row">
+          <span class="text-sm font-medium amiri label-ar">الصلاة على النبي</span>
+          <span class="text-sm font-medium label-en" style="display:none">Salawat</span>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span class="zikr-count" id="salawat-count">{{ progress.salawat_count|default:0 }}</span>
+            <button class="zikr-btn" onclick="tapZikr('salawat_count', 'salawat-count')">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:1rem;padding:1rem;background:rgba(255,255,255,0.03);border-radius:0.75rem;text-align:center">
+        <div class="amiri text-lg text-primary" style="line-height:1.6">سُبْحَانَ اللَّهِ وَبِحَمْدِهِ</div>
+        <div class="text-xs text-muted mt-1">Glory be to Allah and His is the praise — 100×/day</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Matn Memorization ── -->
+  <div class="habit-card {% if progress.matn_memorization %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">📜</div>
+        <span class="label-ar">حفظ المتون</span>
+        <span class="label-en" style="display:none">Matn Memorization</span>
+      </div>
+      <span class="habit-card-badge {% if progress.matn_memorization %}done{% endif %}">
+        {% if progress.matn_memorization %}✓ <span class="label-ar">مكتمل</span><span class="label-en" style="display:none">Done</span>{% else %}+20 XP{% endif %}
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div class="check-row" onclick="toggleCheck('matn_memorization', this)">
+        <div class="check-box {% if progress.matn_memorization %}checked{% endif %}" id="chk-matn_memorization">{% if progress.matn_memorization %}✓{% endif %}</div>
+        <div style="flex:1">
+          <div class="check-label amiri label-ar">حفظت بيتًا واحدًا من متن اليوم؟</div>
+          <div class="check-label label-en" style="display:none">Did you memorize one verse from a matn today?</div>
+          <div class="check-sub">+20 XP</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Qiyam ── -->
+  <div class="habit-card {% if progress.qiyam %}completed{% endif %}">
+    <div class="habit-card-header">
+      <div class="habit-card-title">
+        <div class="habit-card-icon">🌜</div>
+        <span class="label-ar">قيام الليل</span>
+        <span class="label-en" style="display:none">Qiyam Al-Layl</span>
+      </div>
+      <span class="habit-card-badge {% if progress.qiyam %}done{% endif %}">
+        {% if progress.qiyam %}✓ <span class="label-ar">مكتمل</span><span class="label-en" style="display:none">Done</span>{% else %}+25 XP{% endif %}
+      </span>
+    </div>
+    <div class="habit-card-body">
+      <div class="check-row" onclick="toggleCheck('qiyam', this)">
+        <div class="check-box {% if progress.qiyam %}checked{% endif %}" id="chk-qiyam">{% if progress.qiyam %}✓{% endif %}</div>
+        <div style="flex:1">
+          <div class="check-label amiri label-ar">صليت قيام الليل؟</div>
+          <div class="check-label label-en" style="display:none">Did you pray Qiyam Al-Layl?</div>
+          <div class="check-sub">+25 XP</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let prayerCount = {{ prayers_done }};
+const quranTarget = {{ profile.quran_daily_target }};
+let quranVal = {{ progress.quran_pages }};
+
+async function togglePrayer(field, el) {
+  const isDone = el.classList.contains('done');
+  const res = await apiUpdate(field, !isDone);
+  if (res.ok) {
+    if (isDone) { el.classList.remove('done'); prayerCount = Math.max(0, prayerCount - 1); }
+    else         { el.classList.add('done'); prayerCount++; showXpPopup(20); }
+    const c1 = document.getElementById('prayer-count');
+    const c2 = document.getElementById('prayer-done-count');
+    const c3 = document.getElementById('prayer-done-count2');
+    if (c1) c1.textContent = prayerCount;
+    if (c2) c2.textContent = prayerCount;
+    if (c3) c3.textContent = prayerCount;
+  }
+}
+
+async function changeNum(field, delta) {
+  if (field === 'quran_pages') {
+    quranVal = Math.max(0, quranVal + delta);
+    document.getElementById('quran-val').textContent = quranVal;
+    document.getElementById('quran-val2').textContent = quranVal;
+    const pct = Math.min(100, Math.round((quranVal / quranTarget) * 100));
+    document.getElementById('quran-bar').style.width = pct + '%';
+    document.getElementById('quran-pct').textContent = pct + '%';
+    document.getElementById('quran-badge').textContent = pct + '%';
+    const res = await apiUpdate(field, quranVal);
+    if (res.ok && delta > 0) showXpPopup(10);
+  }
+}
+
+async function toggleCheck(field, row) {
+  const box = document.getElementById('chk-' + field);
+  const isDone = box.classList.contains('checked');
+  const res = await apiUpdate(field, !isDone);
+  if (res.ok) {
+    if (isDone) { box.classList.remove('checked'); box.textContent = ''; }
+    else        { box.classList.add('checked'); box.textContent = '✓'; showXpPopup(15); }
+  }
+}
+
+const zikrState = {
+  istighfar_count: {{ progress.istighfar_count|default:0 }},
+  salawat_count: {{ progress.salawat_count|default:0 }},
+};
+async function tapZikr(field, elId) {
+  zikrState[field] = (zikrState[field] || 0) + 1;
+  document.getElementById(elId).textContent = zikrState[field];
+  await apiUpdate(field, zikrState[field]);
+}
+</script>
+{% endblock %}
